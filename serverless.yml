@@ -11,6 +11,13 @@ provider:
   architecture: arm64
   region: ap-northeast-1
 
+build:
+  esbuild:
+    bundle: true
+    format: cjs
+    outExtension:
+      '.js': '.cjs'
+
 functions:
   hello:
     handler: handler.hello
