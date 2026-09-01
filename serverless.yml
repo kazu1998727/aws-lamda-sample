@@ -10,6 +10,20 @@ provider:
   runtime: nodejs24.x
   architecture: arm64
   region: ap-northeast-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ce:GetCostAndUsage
+          Resource: "*"
+
+build:
+  esbuild:
+    bundle: true
+    format: cjs
+    outExtension:
+      '.js': '.cjs'
 
 functions:
   hello:
@@ -18,3 +32,11 @@ functions:
     handler: handler.bye
   sample: 
     handler: ./src/handler.sample
+  costNotification:
+    handler: ./src/costNotification.handler
+    events:
+      - schedule:
+          rate: cron(0 0 * * ? *)
+          enabled: true
+    environment:
+      SLACK_WEBHOOK_URL: ${ssm:udemy-aws-lamda-slack-webhook}
