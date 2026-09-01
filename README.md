@@ -66,3 +66,15 @@ This will start a local emulator of AWS Lambda and tunnel your requests to and f
 Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
 
 When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.
+
+## 作業記録
+
+- [2026-09-01 コスト通知 Lambda の追加と、その周辺で踏んだ落とし穴](docs/2026-09-01-cost-notification-lambda.md)
+  — `${ssm:...}` が秘密を隠さない件、`package.json` 無しの `npm install` が
+  `node_modules` を刈る件、デプロイ zip への CLI 混入。
+- [2026-09-01 Slack 送信の実装で ESM と CommonJS を混ぜて壊した話](docs/2026-09-01-slack-webhook-esm-cjs.md)
+  — `import` と `exports` の混在でハンドラが未エクスポートになる件、
+  `node -e` がモジュール形式の検証に使えない件。
+
+> なお、この README 上部は Serverless の公式テンプレートのままで、
+> サービス名・リージョン・関数一覧が実態とずれています。詳細は上記の作業記録を参照。
