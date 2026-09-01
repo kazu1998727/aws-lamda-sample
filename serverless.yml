@@ -10,6 +10,13 @@ provider:
   runtime: nodejs24.x
   architecture: arm64
   region: ap-northeast-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ce:GetCostAndUsage
+          Resource: "*"
 
 build:
   esbuild:
