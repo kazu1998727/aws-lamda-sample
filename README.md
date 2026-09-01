@@ -1,69 +1,87 @@
-<!--
-title: 'AWS NodeJS Example'
-description: 'This template demonstrates how to deploy a simple NodeJS function running on AWS Lambda using the Serverless Framework.'
-layout: Doc
-framework: v4
-platform: AWS
-language: nodeJS
-priority: 1
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+# sample — Serverless Framework AWS Lambda 練習用プロジェクト
 
-# Serverless Framework AWS NodeJS Example
+Serverless Framework (v4) を使って Node.js の関数を AWS Lambda にデプロイする学習用サンプルです。イベント定義や永続化 (データベース) は含まれておらず、`serverless invoke` から直接呼び出すだけのシンプルな構成になっています。
 
-This template demonstrates how to deploy a simple NodeJS function running on AWS Lambda using the Serverless Framework. The deployed function does not include any event definitions or any kind of persistence (database). For more advanced configurations check out the [examples repo](https://github.com/serverless/examples/) which include use cases like API endpoints, workers triggered by SQS, persistence with DynamoDB, and scheduled tasks. For details about configuration of specific events, please refer to our [documentation](https://www.serverless.com/framework/docs/providers/aws/events/).
+## 構成
 
-## Usage
+| 項目 | 値 |
+| --- | --- |
+| org | `kazu1216727` |
+| app / service | `sample` |
+| プロバイダ | AWS |
+| ランタイム | `nodejs24.x` |
+| アーキテクチャ | `arm64` |
+| リージョン | `ap-northeast-1` (東京) |
 
-### Deployment
+### ファイル
 
-In order to deploy the example, you need to run the following command:
+- [handler.js](handler.js) — Lambda 関数の実装
+- [serverless.yml](serverless.yml) — サービス・プロバイダ・関数の定義
+
+### 関数
+
+| 関数名 | ハンドラ | レスポンス |
+| --- | --- | --- |
+| `hello` | [handler.hello](handler.js#L1) | `{"message":"こんにちは！"}` |
+| `bye` | [handler.bye](handler.js#L10) | `{"message":"さよなら！"}` |
+
+いずれも `statusCode: 200` と JSON 文字列の `body` を返します。
+
+## 使い方
+
+### 準備
+
+```
+npm install
+```
+
+デプロイには AWS の認証情報と、`serverless.yml` の `org` に対応する Serverless Framework のアクセスキーが必要です。
+
+### デプロイ
 
 ```
 serverless deploy
 ```
 
-After running deploy, you should see output similar to:
+実行すると次のような出力になります。
 
 ```
-Deploying "aws-node" to stage "dev" (us-east-1)
+Deploying "sample" to stage "dev" (ap-northeast-1)
 
-✔ Service deployed to stack aws-node-dev (90s)
+✔ Service deployed to stack sample-dev (90s)
 
 functions:
-  hello: aws-node-dev-hello (1.5 kB)
+  hello: sample-dev-hello (1.5 kB)
+  bye: sample-dev-bye (1.5 kB)
 ```
 
-### Invocation
+### 呼び出し
 
-After successful deployment, you can invoke the deployed function by using the following command:
+デプロイ後、次のコマンドで関数を実行できます。
 
 ```
 serverless invoke --function hello
+serverless invoke --function bye
 ```
 
-Which should result in response similar to the following:
+`hello` の結果は次のようになります。
 
 ```json
 {
   "statusCode": 200,
-  "body": "{\"message\":\"Go Serverless v4.0! Your function executed successfully!\"}"
+  "body": "{\"message\":\"こんにちは！\"}"
 }
 ```
 
-### Local development
-
-The easiest way to develop and test your function is to use the Serverless Framework's `dev` command:
+### ローカル開発
 
 ```
 serverless dev
 ```
 
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
+AWS Lambda のローカルエミュレータが起動し、リクエストが AWS Lambda との間でトンネリングされます。クラウド上で動かしているのと同じ感覚で関数を呼び出せるため、再デプロイなしにコードを書き換えて結果をすぐ確認できます。
 
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
+開発が終わったら `serverless deploy` でクラウドへ反映してください。
 
 When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.
 
