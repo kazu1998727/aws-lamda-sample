@@ -1,4 +1,4 @@
-exports.hello = async (event) => {
+export const hello = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({
@@ -7,7 +7,7 @@ exports.hello = async (event) => {
   };
 };
 
-exports.bye = async (event) => {
+export const bye = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({
