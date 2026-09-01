@@ -1,4 +1,4 @@
-exports.sample = async (event) => {
+export const sample = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({

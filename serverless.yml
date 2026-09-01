@@ -18,3 +18,11 @@ functions:
     handler: handler.bye
   sample: 
     handler: ./src/handler.sample
+  costNotification:
+    handler: ./src/costNotification.handler
+    events:
+      - schedule:
+          rate: cron(0 0 * * ? *)
+          enabled: true
+    environment:
+      SLACK_WEBHOOK_URL: ${ssm:udemy-aws-lamda-slack-webhook}
