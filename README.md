@@ -75,6 +75,9 @@ When you are done developing, don't forget to run `serverless deploy` to deploy 
 - [2026-09-01 Slack 送信の実装で ESM と CommonJS を混ぜて壊した話](docs/2026-09-01-slack-webhook-esm-cjs.md)
   — `import` と `exports` の混在でハンドラが未エクスポートになる件、
   `node -e` がモジュール形式の検証に使えない件。
+- [2026-09-01 aws-sdk v2 から v3 への移行と、`invoke local` の ERR_MODULE_NOT_FOUND](docs/2026-09-01-aws-sdk-v3-esbuild.md)
+  — `AWS is not defined` の正体、Serverless v4 の esbuild が `.js` では既定で走らない件、
+  古いバックアップで編集中のファイルを上書きした失敗。
 
 > なお、この README 上部は Serverless の公式テンプレートのままで、
 > サービス名・リージョン・関数一覧が実態とずれています。詳細は上記の作業記録を参照。
