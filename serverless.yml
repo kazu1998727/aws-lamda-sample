@@ -24,6 +24,8 @@ provider:
         - Effect: Allow
           Action:
             - ce:GetCostAndUsage
+            - dynamodb:PutItem
+            - dynamodb:Scan
           Resource: "*"
 
 build:
@@ -54,3 +56,33 @@ functions:
       - httpApi:
           method: get
           path: /hello
+
+  taskList:
+    handler: ./src/taskHandler.list
+    events:
+      - httpApi:
+          method: get
+          path: /tasks
+
+  taskPost:
+    handler: ./src/taskHandler.post
+    events:
+      - httpApi:
+          method: post
+          path: /tasks
+
+resources:
+  Resources:
+    TasksDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: tasks
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
