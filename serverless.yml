@@ -24,6 +24,8 @@ provider:
         - Effect: Allow
           Action:
             - ce:GetCostAndUsage
+            - dynamodb:PutItem
+            - dynamodb:Scan
           Resource: "*"
 
 build:
@@ -55,17 +57,19 @@ functions:
           method: get
           path: /hello
 
+  taskList:
+    handler: ./src/taskHandler.list
+    events:
+      - httpApi:
+          method: get
+          path: /tasks
+
   taskPost:
     handler: ./src/taskHandler.post
     events:
       - httpApi:
           method: post
           path: /tasks
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:PutItem
-        Resource: 'arn:aws:dynamodb:*:*:table/tasks'
 
 resources:
   Resources:

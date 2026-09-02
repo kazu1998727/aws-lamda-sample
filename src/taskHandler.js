@@ -1,4 +1,8 @@
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBClient,
+  PutItemCommand,
+  ScanCommand,
+} from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
 
 export const post = async (event) => {
@@ -21,5 +25,20 @@ export const post = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({ message: "Task created successfully" }),
+  };
+};
+
+export const list = async (event) => {
+  const client = new DynamoDBClient({ region: "ap-northeast-1" });
+
+  const command = new ScanCommand({
+    TableName: "tasks",
+  });
+
+  const response = await client.send(command);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(response.Items),
   };
 };
