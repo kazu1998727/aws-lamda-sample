@@ -105,6 +105,10 @@ When you are done developing, don't forget to run `serverless deploy` to deploy 
 - [2026-09-02 `{"message":"Internal Server Error"}` を「繋がらない」と読み違えた話](docs/2026-09-02-lambda-500-debugging.md)
   — Lambda プロキシ統合の 500 に情報が無い件、存在しないテーブルで `AccessDenied` が
   返る件、ログ整形でタイムスタンプを捨てて誤認した件。
+- [2026-09-02 前回の学びを次の PR で適用した回と、`gh pr list` で PR が「消えた」件](docs/2026-09-02-pr-workflow-applied.md)
+  — PR を最後に作って本文と差分を突き合わせた件、マージまで2分未満が実測2件で
+  裏付けられた件、`gh pr list` の既定を状態変化と読み違えた件、他人が編集中の
+  作業ツリーを避けるための `git worktree`。
 
 > なお、この README 上部は Serverless の公式テンプレートのままで、
 > サービス名・リージョン・関数一覧が実態とずれています。詳細は上記の作業記録を参照。
