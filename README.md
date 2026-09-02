@@ -99,6 +99,9 @@ When you are done developing, don't forget to run `serverless deploy` to deploy 
 - [2026-09-02 HTTP API に throttling を入れた理由と、それが CloudFormation に残らない件](docs/2026-09-02-api-gateway-throttling.md)
   — API Gateway の既定上限がアカウント上限と同値な件、プラグインが CFN ではなく
   デプロイ後の API 直叩きで設定する件、スロットル時に 429 ではなく 503 が返った件。
+- [2026-09-02 変更セットが固まる前に PR を作って本文がズレた件と、`gh pr edit` が落ちる件](docs/2026-09-02-pr-body-drift.md)
+  — PR 本文が diff を否定したままマージされた件、`gh pr edit` が projectCards の
+  GraphQL エラーで落ちる件（マージとは無関係）、失敗の原因を直前の状態変化に誤って帰した件。
 
 > なお、この README 上部は Serverless の公式テンプレートのままで、
 > サービス名・リージョン・関数一覧が実態とずれています。詳細は上記の作業記録を参照。
