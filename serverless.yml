@@ -5,6 +5,14 @@ app: sample
 # "service" is the name of this project. This will also be added to your AWS resource names.
 service: sample
 
+plugins:
+  - serverless-api-gateway-throttling 
+
+custom:
+  apiGatewayThrottling:
+    maxRequestsPerSecond: 10 
+    maxConcurrentRequests: 5
+
 provider:
   name: aws
   runtime: nodejs24.x
@@ -40,3 +48,9 @@ functions:
           enabled: true
     environment:
       SLACK_WEBHOOK_URL: ${ssm:udemy-aws-lamda-slack-webhook}
+  helloWorld:
+    handler: ./src/hello.handler
+    events:
+      - httpApi:
+          method: get
+          path: /hello
