@@ -1,8 +1,48 @@
 # sample — Serverless Framework AWS Lambda 練習用プロジェクト
 
-Serverless Framework (v4) を使って Node.js の関数を AWS Lambda にデプロイする学習用サンプルです。イベント定義や永続化 (データベース) は含まれておらず、`serverless invoke` から直接呼び出すだけのシンプルな構成になっています。
+Serverless Framework (v4) を使って Node.js の関数を AWS Lambda にデプロイする学習用サンプルです。`serverless invoke` から直接呼び出すだけの関数に加えて、HTTP API 経由のタスク CRUD (DynamoDB 永続化) と、日次で AWS 利用費を Slack に通知するスケジュール実行を含みます。
 
-## 構成
+## 構成図
+
+```mermaid
+flowchart LR
+  Client(["クライアント"])
+
+  subgraph AWS["AWS / ap-northeast-1"]
+    APIGW["API Gateway (HTTP API)<br/>10 rps / 5 concurrent"]
+
+    subgraph LambdaGroup["Lambda — nodejs24.x / arm64"]
+      HelloWorld["helloWorld"]
+      TaskList["taskList"]
+      TaskPost["taskPost"]
+      Cost["costNotification"]
+      Invoke["hello / bye / sample<br/>(invoke 専用)"]
+    end
+
+    EB["EventBridge Scheduler<br/>cron(0 0 * * ? *) = 毎日 09:00 JST"]
+    DDB[("DynamoDB<br/>tasks / PK: id")]
+    SSM["SSM Parameter Store<br/>udemy-aws-lamda-slack-webhook"]
+  end
+
+  CE["Cost Explorer<br/>(us-east-1)"]
+  Slack(["Slack Incoming Webhook"])
+
+  Client -->|"HTTPS"| APIGW
+  Client -.->|"serverless invoke"| Invoke
+  APIGW -->|"GET /hello"| HelloWorld
+  APIGW -->|"GET /tasks"| TaskList
+  APIGW -->|"POST /tasks"| TaskPost
+  TaskList -->|"Scan"| DDB
+  TaskPost -->|"PutItem"| DDB
+  EB --> Cost
+  Cost -->|"GetCostAndUsage"| CE
+  SSM -.->|"デプロイ時に埋め込み"| Cost
+  Cost -->|"POST"| Slack
+```
+
+SSM からの Webhook URL 取得は実行時ではなくデプロイ時の解決 (`${ssm:...}`) で、値は環境変数として関数に埋め込まれます。詳細は [作業記録](docs/2026-09-01-cost-notification-lambda.md) を参照してください。
+
+## 設定
 
 | 項目 | 値 |
 | --- | --- |
@@ -12,20 +52,38 @@ Serverless Framework (v4) を使って Node.js の関数を AWS Lambda にデプ
 | ランタイム | `nodejs24.x` |
 | アーキテクチャ | `arm64` |
 | リージョン | `ap-northeast-1` (東京) |
+| プラグイン | `serverless-api-gateway-throttling` |
 
 ### ファイル
 
-- [handler.js](handler.js) — Lambda 関数の実装
-- [serverless.yml](serverless.yml) — サービス・プロバイダ・関数の定義
+- [serverless.yml](serverless.yml) — サービス・プロバイダ・関数・DynamoDB テーブルの定義
+- [handler.js](handler.js) — `hello` / `bye`
+- [src/handler.js](src/handler.js) — `sample`
+- [src/hello.js](src/hello.js) — `GET /hello`
+- [src/taskHandler.js](src/taskHandler.js) — `GET /tasks` / `POST /tasks`
+- [src/costNotification.js](src/costNotification.js) — 日次のコスト通知
 
 ### 関数
 
-| 関数名 | ハンドラ | レスポンス |
-| --- | --- | --- |
-| `hello` | [handler.hello](handler.js#L1) | `{"message":"こんにちは！"}` |
-| `bye` | [handler.bye](handler.js#L10) | `{"message":"さよなら！"}` |
+| 関数名 | ハンドラ | トリガー | 概要 |
+| --- | --- | --- | --- |
+| `hello` | [handler.hello](handler.js#L1) | invoke のみ | `{"message":"こんにちは！"}` |
+| `bye` | [handler.bye](handler.js#L10) | invoke のみ | `{"message":"さよなら！"}` |
+| `sample` | [src/handler.sample](src/handler.js#L1) | invoke のみ | `{"message":"サンプルです！"}` |
+| `helloWorld` | [src/hello.handler](src/hello.js#L1) | `GET /hello` | `{"message":"Hello, World!"}` |
+| `taskList` | [src/taskHandler.list](src/taskHandler.js#L31) | `GET /tasks` | `tasks` テーブルを Scan して返す |
+| `taskPost` | [src/taskHandler.post](src/taskHandler.js#L8) | `POST /tasks` | `title` を受け取り UUID を採番して PutItem |
+| `costNotification` | [src/costNotification.handler](src/costNotification.js#L10) | cron (毎日 09:00 JST) | 今月の利用費を Cost Explorer から取得し Slack へ通知 |
 
-いずれも `statusCode: 200` と JSON 文字列の `body` を返します。
+### IAM
+
+`provider.iam` にまとめて定義しており、全関数が同じロールを共有します (`Resource: "*"`)。
+
+| Action | 用途 |
+| --- | --- |
+| `ce:GetCostAndUsage` | `costNotification` |
+| `dynamodb:PutItem` | `taskPost` |
+| `dynamodb:Scan` | `taskList` |
 
 ## 使い方
 
@@ -62,6 +120,7 @@ functions:
 ```
 serverless invoke --function hello
 serverless invoke --function bye
+serverless invoke --function sample
 ```
 
 `hello` の結果は次のようになります。
@@ -71,6 +130,14 @@ serverless invoke --function bye
   "statusCode": 200,
   "body": "{\"message\":\"こんにちは！\"}"
 }
+```
+
+HTTP API のエンドポイントは `serverless deploy` の出力に表示されます。
+
+```
+curl "$ENDPOINT/hello"
+curl "$ENDPOINT/tasks"
+curl -X POST "$ENDPOINT/tasks" -H 'Content-Type: application/json' -d '{"title":"買い物"}'
 ```
 
 ### ローカル開発
@@ -109,6 +176,3 @@ When you are done developing, don't forget to run `serverless deploy` to deploy 
   — PR を最後に作って本文と差分を突き合わせた件、マージまで2分未満が実測2件で
   裏付けられた件、`gh pr list` の既定を状態変化と読み違えた件、他人が編集中の
   作業ツリーを避けるための `git worktree`。
-
-> なお、この README 上部は Serverless の公式テンプレートのままで、
-> サービス名・リージョン・関数一覧が実態とずれています。詳細は上記の作業記録を参照。
